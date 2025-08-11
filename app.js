@@ -1,25 +1,27 @@
-const express = require("express");
-// Import the Express framework
+const express = require("express"); // Import the Express framework
 
-const app = express();
-// Create an instance of an Express application
+const fs = require("fs"); // Import the built-in File System module
+const app = express(); // Create an Express application instance
 
-const PORT = 3000;
-// Define the port number where the server will listen
+const PORT = 3000; // Define the port number for the server
 
-// Example route returning HTML (commented out)
-// app.get("/", (req, res) => {
-//   res.status(200).send("<h1>Get request success</h1>");
-// });
+const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
+// Read the movies.json file synchronously and parse its JSON content into a JS object
 
-app.get("/", (req, res) => {
-  // Define a GET route for the root URL "/"
-  res.status(200).json({ message: "Success", status: 200 });
-  // Send a JSON response with status code 200
+app.get("/api/v1/movies", (req, res) => {
+  // Define a GET route at /api/v1/movies
+  res.status(200).json({
+    // Send an HTTP 200 (OK) response in JSON format
+    message: "Success", // Include a success message
+    data: {
+      // Wrap movie data inside a "data" object
+      movies: movies, // Send the movies list from the file
+    },
+  });
 });
 
 app.listen(PORT, () => {
-  // Start the server and listen on the specified PORT
+  // Start the server and listen for requests on the specified PORT
   console.log(`Backend Server is running on PORT = ${PORT}....`);
-  // Log a message to confirm server is running
+  // Log a message to confirm the server is running
 });
