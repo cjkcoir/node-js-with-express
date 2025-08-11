@@ -1,0 +1,23 @@
+{
+  "name": "node-js-with-express",
+  "version": "1.0.0",
+  "description": "learning",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cjkcoir/node-js-with-express.git"
+  },
+  "author": "Lord PalaniMurugan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cjkcoir/node-js-with-express/issues"
+  },
+  "homepage": "https://github.com/cjkcoir/node-js-with-express#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
