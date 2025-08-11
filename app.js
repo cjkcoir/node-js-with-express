@@ -11,10 +11,11 @@ const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
 app.get("/api/v1/movies", (req, res) => {
   // Define a GET route at /api/v1/movies
   res.status(200).json({
-    // Send an HTTP 200 (OK) response in JSON format
+    // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
     message: "Success", // Include a success message
+    noOfMovies: movies.length,
     data: {
-      // Wrap movie data inside a "data" object
+      // Wrap movie data inside a "data" object --ENVELOPING
       movies: movies, // Send the movies list from the file
     },
   });
