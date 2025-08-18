@@ -1,5 +1,6 @@
 const express = require("express"); // Import the Express framework
 const moment = require("moment-timezone");
+const morgan = require("morgan");
 
 const fs = require("fs"); // Import the built-in File System module
 const app = express(); // Create an Express application instance
@@ -15,6 +16,7 @@ function ownMiddleware(req, res, next) {
 }
 
 app.use(express.json());
+app.use(morgan("dev"));
 app.use(ownMiddleware);
 app.use((req, res, next) => {
   req.requestedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
