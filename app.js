@@ -21,8 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
-//127.0.0.1:3000/api/v1/movies --GET
-http: app.get("/api/v1/movies", (req, res) => {
+//ROUTE HANDLER FUNCTIONS
+
+const getAllMovies = (req, res) => {
   // Define a GET route at /api/v1/movies
   res.status(200).json({
     // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
@@ -34,16 +35,16 @@ http: app.get("/api/v1/movies", (req, res) => {
       movies: movies, // Send the movies list from the file
     },
   });
-});
+};
 
-// http://127.0.0.1:3000/api/v1/movies/6--GET
-app.get("/api/v1/movies/:id", (req, res) => {
+const getAMovieById = (req, res) => {
   const id = req.params.id * 1;
   let movie = movies.find((element) => element.id === id);
 
   if (!movie) {
     res.status(400).json({
-      status: "Failed",
+      status: "Failed to get a Movie by ID",
+      requestedAt: req.requestedAt,
       message: `Movie with id = ${id} is not in the Database`,
     });
   }
@@ -56,10 +57,9 @@ app.get("/api/v1/movies/:id", (req, res) => {
       movie: movie, // Send the movies list from the file
     },
   });
-});
+};
 
-// http://127.0.0.1:3000/api/v1/movies---POST
-app.post("/api/v1/movies", (req, res) => {
+const createAMovie = (req, res) => {
   console.log(req.body);
   const newId = movies[movies.length - 1].id + 1;
   const newMovie = Object.assign({ id: newId }, req.body);
@@ -74,7 +74,77 @@ app.post("/api/v1/movies", (req, res) => {
       },
     });
   });
-});
+};
+
+const updateAMovieById = (req, res) => {
+  const id = req.params.id * 1;
+  let movieToUpdate = movies.find((element) => element.id === id);
+
+  if (!movieToUpdate) {
+    res.status(404).json({
+      status: "Failed to Update",
+      requestedAt: req.requestedAt,
+      message: `Movie with id = ${id} is not in the Database`,
+    });
+  }
+
+  const index = movies.indexOf(movieToUpdate);
+  const updatedMovieObject = Object.assign(movieToUpdate, req.body);
+  movies[index] = updatedMovieObject;
+  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+    res.status(200).json({
+      // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
+      status: "Success",
+      message: `Successfully Updated a Movie with ID = ${id}`, // Include a success message
+      requestedAt: req.requestedAt,
+      data: {
+        UpdatedMovie: updatedMovieObject,
+      },
+    });
+  });
+};
+
+const deleteAMovieById = (req, res) => {
+  const id = req.params.id * 1;
+  let movieToUpdate = movies.find((element) => element.id === id);
+
+  if (!movieToUpdate) {
+    res.status(404).json({
+      status: "Failed to delete",
+      requestedAt: req.requestedAt,
+      message: `Movie with id = ${id} is not in the Database`,
+    });
+  }
+
+  const index = movies.indexOf(movieToUpdate);
+  movies.splice(index, 1);
+  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+    res.status(200).json({
+      // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
+      status: "Success",
+      message: `Successfully deleted a Movie with ID = ${id}`, // Include a success message
+      requestedAt: req.requestedAt,
+      data: {
+        DeletedMovie: movieToUpdate,
+      },
+    });
+  });
+};
+
+//127.0.0.1:3000/api/v1/movies --GET
+app.get("/api/v1/movies", getAllMovies);
+
+// http://127.0.0.1:3000/api/v1/movies/6--GET
+app.get("/api/v1/movies/:id", getAMovieById);
+
+// http://127.0.0.1:3000/api/v1/movies/6--PATCH
+app.patch("/api/v1/movies/:id", updateAMovieById);
+
+// http://127.0.0.1:3000/api/v1/movies/6--DELETE
+app.delete("/api/v1/movies/:id", deleteAMovieById);
+
+// http://127.0.0.1:3000/api/v1/movies---POST
+app.post("/api/v1/movies", createAMovie);
 
 app.listen(PORT, () => {
   // Start the server and listen for requests on the specified PORT
