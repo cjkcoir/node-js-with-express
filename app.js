@@ -133,20 +133,27 @@ const deleteAMovieById = (req, res) => {
   });
 };
 
-//127.0.0.1:3000/api/v1/movies --GET
-app.get("/api/v1/movies", getAllMovies);
+// //127.0.0.1:3000/api/v1/movies --GET
+// app.get("/api/v1/movies", getAllMovies);
 
-// http://127.0.0.1:3000/api/v1/movies/6--GET
-app.get("/api/v1/movies/:id", getAMovieById);
+// // http://127.0.0.1:3000/api/v1/movies/6--GET
+// app.get("/api/v1/movies/:id", getAMovieById);
 
-// http://127.0.0.1:3000/api/v1/movies/6--PATCH
-app.patch("/api/v1/movies/:id", updateAMovieById);
+// // http://127.0.0.1:3000/api/v1/movies/6--PATCH
+// app.patch("/api/v1/movies/:id", updateAMovieById);
 
-// http://127.0.0.1:3000/api/v1/movies/6--DELETE
-app.delete("/api/v1/movies/:id", deleteAMovieById);
+// // http://127.0.0.1:3000/api/v1/movies/6--DELETE
+// app.delete("/api/v1/movies/:id", deleteAMovieById);
 
-// http://127.0.0.1:3000/api/v1/movies---POST
-app.post("/api/v1/movies", createAMovie);
+// // http://127.0.0.1:3000/api/v1/movies---POST
+// app.post("/api/v1/movies", createAMovie);
+
+app.route("/api/v1/movies").get(getAllMovies).post(createAMovie);
+app
+  .route("/api/v1/movies/:id")
+  .get(getAMovieById)
+  .patch(updateAMovieById)
+  .delete(deleteAMovieById);
 
 app.listen(PORT, () => {
   // Start the server and listen for requests on the specified PORT
