@@ -1,6 +1,7 @@
 const express = require("express"); // Import the Express framework
 const moment = require("moment-timezone");
 const morgan = require("morgan");
+const moviesRouter = express.Router();
 
 const fs = require("fs"); // Import the built-in File System module
 const app = express(); // Create an Express application instance
@@ -148,12 +149,14 @@ const deleteAMovieById = (req, res) => {
 // // http://127.0.0.1:3000/api/v1/movies---POST
 // app.post("/api/v1/movies", createAMovie);
 
-app.route("/api/v1/movies").get(getAllMovies).post(createAMovie);
-app
-  .route("/api/v1/movies/:id")
+moviesRouter.route("/").get(getAllMovies).post(createAMovie);
+moviesRouter
+  .route("/:id")
   .get(getAMovieById)
   .patch(updateAMovieById)
   .delete(deleteAMovieById);
+
+app.use("/api/v1/movies", moviesRouter);
 
 app.listen(PORT, () => {
   // Start the server and listen for requests on the specified PORT
