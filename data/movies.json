@@ -1,1 +1,9 @@
-[{"id":2,"name":"masterblasters","releaseYear":2025,"duration":"2h 59m"},{"id":3,"name":"Soorarai Pottru","releaseYear":2020,"duration":"2h 33m"}]
+[
+  {
+    "id": 2,
+    "name": "masterblaster",
+    "releaseYear": 2025,
+    "duration": "2h 59m"
+  },
+  { "id": 3, "name": "COOLIE", "releaseYear": 2025, "duration": "2h 30m" }
+]
