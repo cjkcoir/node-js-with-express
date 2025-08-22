@@ -3,6 +3,20 @@ const fs = require("fs"); // Import the built-in File System module
 const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
 // Read the movies.json file synchronously and parse its JSON content into a JS object
 
+exports.checkId = (req, res, next, value) => {
+  let movie = movies.find((element) => element.id === value * 1);
+  console.log(`Movie Id = ${value}`);
+  if (!movie) {
+    return res.status(404).json({
+      status: "Failed to get a Movie by ID",
+      requestedAt: req.requestedAt,
+      message: `Movie with id = ${value} is not in the Database`,
+    });
+  }
+
+  next();
+};
+
 exports.getAllMovies = (req, res) => {
   // Define a GET route at /api/v1/movies
   res.status(200).json({
@@ -21,13 +35,6 @@ exports.getAMovieById = (req, res) => {
   const id = req.params.id * 1;
   let movie = movies.find((element) => element.id === id);
 
-  if (!movie) {
-    res.status(400).json({
-      status: "Failed to get a Movie by ID",
-      requestedAt: req.requestedAt,
-      message: `Movie with id = ${id} is not in the Database`,
-    });
-  }
   res.status(200).json({
     // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
     message: "Success", // Include a success message
@@ -60,14 +67,6 @@ exports.updateAMovieById = (req, res) => {
   const id = req.params.id * 1;
   let movieToUpdate = movies.find((element) => element.id === id);
 
-  if (!movieToUpdate) {
-    res.status(404).json({
-      status: "Failed to Update",
-      requestedAt: req.requestedAt,
-      message: `Movie with id = ${id} is not in the Database`,
-    });
-  }
-
   const index = movies.indexOf(movieToUpdate);
   const updatedMovieObject = Object.assign(movieToUpdate, req.body);
   movies[index] = updatedMovieObject;
@@ -87,14 +86,6 @@ exports.updateAMovieById = (req, res) => {
 exports.deleteAMovieById = (req, res) => {
   const id = req.params.id * 1;
   let movieToUpdate = movies.find((element) => element.id === id);
-
-  if (!movieToUpdate) {
-    res.status(404).json({
-      status: "Failed to delete",
-      requestedAt: req.requestedAt,
-      message: `Movie with id = ${id} is not in the Database`,
-    });
-  }
 
   const index = movies.indexOf(movieToUpdate);
   movies.splice(index, 1);

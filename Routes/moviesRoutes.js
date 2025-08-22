@@ -3,6 +3,13 @@ const moviesControllers = require("./../Controllers/moviesControllers");
 
 const router = express.Router();
 
+// router.param("id", (req, res, next, value) => {
+//   console.log(`Movie Id = ${value}`);
+//   next();
+// });
+
+router.param("id", moviesControllers.checkId);
+
 router
   .route("/")
   .get(moviesControllers.getAllMovies)
