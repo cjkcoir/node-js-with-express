@@ -13,7 +13,7 @@ router.param("id", moviesControllers.checkId);
 router
   .route("/")
   .get(moviesControllers.getAllMovies)
-  .post(moviesControllers.createAMovie);
+  .post(moviesControllers.validateReqBody, moviesControllers.createAMovie);
 router
   .route("/:id")
   .get(moviesControllers.getAMovieById)

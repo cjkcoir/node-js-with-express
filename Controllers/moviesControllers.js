@@ -46,6 +46,17 @@ exports.getAMovieById = (req, res) => {
   });
 };
 
+exports.validateReqBody = (req, res, next) => {
+  if (!req.body.name || !req.body.releaseYear || !req.body.duration) {
+    return res.status(400).json({
+      status: "Fail",
+      message:
+        "Request Body should contain name,releaseYear & duration of Movie",
+    });
+  }
+  next(); // ✅ continue to createAMovie
+};
+
 exports.createAMovie = (req, res) => {
   console.log(req.body);
   const newId = movies[movies.length - 1].id + 1;
