@@ -19,5 +19,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// app.use(...) → Registers middleware with your Express app. Middleware is code that runs for every incoming request before it reaches your routes.
+
+// express.static(...) → A built-in middleware function in Express that serves static files (like HTML, CSS, JS, images).
+
+// "./public" → The folder path where your static files are stored. In this case, it tells Express to look in the public folder (relative to your project’s root).
+app.use(express.static("./public"));
+
 app.use("/api/v1/movies", moviesRouter);
 module.exports = app;
