@@ -1,0 +1,12 @@
+h2 {
+  color: blue;
+  text-decoration-line: underline;
+  font-weight: bolder;
+}
+
+.card {
+  background-color: aqua;
+  margin: 50px 100px;
+  padding: 20px;
+  border-radius: 20px;
+}
