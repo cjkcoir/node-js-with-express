@@ -12,9 +12,9 @@ function ownMiddleware(req, res, next) {
 }
 
 app.use(express.json());
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-}
+// if (process.env.NODE_ENV === "development") {
+//   app.use(morgan("dev"));
+// }
 app.use(ownMiddleware);
 app.use((req, res, next) => {
   req.requestedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");

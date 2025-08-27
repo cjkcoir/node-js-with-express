@@ -11,11 +11,47 @@ const PORT = process.env.PORT || 3000; // Define the port number for the server
 console.log(process.env);
 
 mongoose
-  .connect(process.env.CONNECTION_STRING, { useNewUrlParser: true })
+  .connect(process.env.CONNECTION_STRING)
   .then((conn) => {
     // console.log(conn);
     console.log("DB COnnection Successful");
+  })
+  .catch((error) => {
+    console.log(error);
   });
+
+const moviesSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Name is required"],
+    unique: true,
+  },
+  description: {
+    type: String,
+  },
+  duration: {
+    type: Number,
+    required: [true, "Duration is required"],
+  },
+  ratings: {
+    type: Number,
+    default: 1.0,
+  },
+});
+
+const Movie = mongoose.model("Movie", moviesSchema);
+
+const testMovie = new Movie({
+  name: "DieHard-1",
+  description: "Action Packed Movie ",
+  duration: 150,
+  ratings: 5.0,
+});
+
+testMovie
+  .save()
+  .then((doc) => console.log(doc))
+  .catch((err) => console.log(err));
 
 app.listen(PORT, () => {
   // Start the server and listen for requests on the specified PORT
