@@ -8,12 +8,12 @@ const router = express.Router();
 //   next();
 // });
 
-router.param("id", moviesControllers.checkId);
+// router.param("id", moviesControllers.checkId);
 
 router
   .route("/")
   .get(moviesControllers.getAllMovies)
-  .post(moviesControllers.validateReqBody, moviesControllers.createAMovie);
+  .post(moviesControllers.createAMovie);
 router
   .route("/:id")
   .get(moviesControllers.getAMovieById)

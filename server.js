@@ -1,6 +1,7 @@
 const express = require("express"); // Import the Express framework
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+
 dotenv.config({ path: "./config.env" });
 
 const app = require("./app"); // Create an Express application instance
@@ -20,38 +21,17 @@ mongoose
     console.log(error);
   });
 
-const moviesSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Name is required"],
-    unique: true,
-  },
-  description: {
-    type: String,
-  },
-  duration: {
-    type: Number,
-    required: [true, "Duration is required"],
-  },
-  ratings: {
-    type: Number,
-    default: 1.0,
-  },
-});
+// const testMovie = new Movie({
+//   name: "DieHard-1",
+//   description: "Action Packed Movie ",
+//   duration: 150,
+//   ratings: 5.0,
+// });
 
-const Movie = mongoose.model("Movie", moviesSchema);
-
-const testMovie = new Movie({
-  name: "DieHard-1",
-  description: "Action Packed Movie ",
-  duration: 150,
-  ratings: 5.0,
-});
-
-testMovie
-  .save()
-  .then((doc) => console.log(doc))
-  .catch((err) => console.log(err));
+// testMovie
+//   .save()
+//   .then((doc) => console.log(doc))
+//   .catch((err) => console.log(err));
 
 app.listen(PORT, () => {
   // Start the server and listen for requests on the specified PORT
