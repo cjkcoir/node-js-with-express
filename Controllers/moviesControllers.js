@@ -1,7 +1,49 @@
 const Movie = require("./../Models/moviesModel");
+const { MongooseQueryParser } = require("mongoose-query-parser");
+const parser = new MongooseQueryParser();
+const q2m = require("query-to-mongo");
 
 exports.getAllMovies = async (req, res) => {
   try {
+    // let queryString = JSON.stringify(req.query);
+
+    // queryString = queryString.replace(
+    //   /\b(gte|gt|lte|lt)\b/g,
+    //   (match) => `$${match}`
+    // );
+    // console.log(queryString);
+
+    // let queryObject = JSON.parse(queryString);
+
+    // console.log(queryObject);
+
+    // const movies = await Movie.find(queryObject);
+
+    // // Parse query params
+    // const parsed = parser.parse(req.query);
+
+    // console.log(parsed);
+
+    // // parsed.filter will contain MongoDB-ready object
+    // const movies = await Movie.find(parsed.filter);
+
+    // const query = q2m(req.query);
+
+    // console.log(query.criteria); // Mongo-ready filter
+    // const movies = await Movie.find(query.criteria);
+
+    // let queryString = JSON.stringify(req.query);
+
+    // queryString = queryString.replace(
+    //   /\b(gte|gt|lte|lt)\b/g,
+    //   (match) => `$${match}`
+    // );
+
+    // const queryObject = JSON.parse(queryString);
+    // console.log("Final Query Object:", queryObject);
+
+    console.log(req.query);
+
     const movies = await Movie.find(req.query);
 
     res.status(200).json({
