@@ -1,63 +1,40 @@
 const Movie = require("./../Models/moviesModel");
 const { MongooseQueryParser } = require("mongoose-query-parser");
-const parser = new MongooseQueryParser();
-const q2m = require("query-to-mongo");
+
+const qs = require("qs");
 
 exports.getAllMovies = async (req, res) => {
   try {
-    // let queryString = JSON.stringify(req.query);
+    // Parse raw query for advanced filtering
+    const parsedQuery = qs.parse(req._parsedUrl.query);
 
-    // queryString = queryString.replace(
-    //   /\b(gte|gt|lte|lt)\b/g,
-    //   (match) => `$${match}`
-    // );
-    // console.log(queryString);
+    // Clone the query object and remove special fields
+    const queryObj = { ...parsedQuery };
+    const excludedFields = ["sort", "page", "limit", "fields"];
+    excludedFields.forEach((field) => delete queryObj[field]);
 
-    // let queryObject = JSON.parse(queryString);
+    // Convert operators to MongoDB format
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    const filter = JSON.parse(queryStr);
 
-    // console.log(queryObject);
+    // Build the query
+    let query = Movie.find(filter);
 
-    // const movies = await Movie.find(queryObject);
+    // Apply sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    }
 
-    // // Parse query params
-    // const parsed = parser.parse(req.query);
-
-    // console.log(parsed);
-
-    // // parsed.filter will contain MongoDB-ready object
-    // const movies = await Movie.find(parsed.filter);
-
-    // const query = q2m(req.query);
-
-    // console.log(query.criteria); // Mongo-ready filter
-    // const movies = await Movie.find(query.criteria);
-
-    // let queryString = JSON.stringify(req.query);
-
-    // queryString = queryString.replace(
-    //   /\b(gte|gt|lte|lt)\b/g,
-    //   (match) => `$${match}`
-    // );
-
-    // const queryObject = JSON.parse(queryString);
-    // console.log("Final Query Object:", queryObject);
-
-    console.log(req.query);
-
-    const excludeFields = ["sort", "page", "limit", "fields"];
-    const queryObject = { ...req.query };
-    excludeFields.forEach((el) => {
-      delete queryObject[el];
-    });
-    console.log(queryObject);
-
-    const movies = await Movie.find(queryObject);
+    // Execute query
+    const movies = await query;
 
     res.status(200).json({
       status: "Success",
       NoofMovies: movies.length,
       data: {
-        movies: movies,
+        movies,
       },
     });
   } catch (error) {
@@ -67,6 +44,59 @@ exports.getAllMovies = async (req, res) => {
     });
   }
 };
+
+// exports.getAllMovies = async (req, res) => {
+
+//   try {
+//     // Parse the raw query string to support nested parameters like ratings[gte]
+//     const parsedQuery = qs.parse(req._parsedUrl.query);
+
+//     // Log the parsed query for debugging
+//     console.log(parsedQuery);
+
+//     // Convert the parsed query object to a string for regex manipulation
+//     let queryString = JSON.stringify(parsedQuery);
+
+//     // Replace operators like gte, lt with MongoDB equivalents ($gte, $lt)
+//     queryString = queryString.replace(
+//       /\b(gte|gt|lte|lt)\b/g,
+//       (match) => `$${match}`
+//     );
+
+//     // Parse the modified string back into an object
+//     let queryObject = JSON.parse(queryString);
+
+//     // Ensure it's a plain object (not a prototype chain object)
+//     queryObject = { ...queryObject };
+
+//     // Log the final query object to verify MongoDB filter structure
+//     console.log(queryObject);
+
+//     let query = Movie.find(queryObject);
+
+//     if (req.query.sort) {
+//       query = query.sort(req.query.sort);
+//     }
+
+//     // Query the Movie collection using the constructed filter
+//     const movies = await query;
+
+//     // Send a success response with the number of movies and the data
+//     res.status(200).json({
+//       status: "Success",
+//       NoofMovies: movies.length,
+//       data: {
+//         movies: movies,
+//       },
+//     });
+//   } catch (error) {
+//     // Handle any errors and send a failure response
+//     res.status(400).json({
+//       status: "Fail",
+//       message: error.message,
+//     });
+//   }
+// };
 
 exports.getAMovieById = async (req, res) => {
   try {
