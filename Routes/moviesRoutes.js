@@ -9,6 +9,12 @@ const router = express.Router();
 // });
 
 // router.param("id", moviesControllers.checkId);
+router
+  .route("/highest-rated")
+  .get(
+    moviesControllers.getTopThreeHighestRatingsMovies,
+    moviesControllers.getAllMovies
+  );
 
 router
   .route("/")

@@ -3,10 +3,17 @@ const { MongooseQueryParser } = require("mongoose-query-parser");
 
 const qs = require("qs");
 
+exports.getTopThreeHighestRatingsMovies = (req, res, next) => {
+  req.query.limit = "3";
+  req.query.sort = "-ratings";
+  next();
+};
+
 exports.getAllMovies = async (req, res) => {
   try {
     // Parse raw query for advanced filtering
-    const parsedQuery = qs.parse(req._parsedUrl.query);
+    // const parsedQuery = qs.parse(req._parsedUrl.query);
+    const parsedQuery = req.query;
 
     // Clone the query object and remove special fields
     const queryObj = { ...parsedQuery };
@@ -25,6 +32,33 @@ exports.getAllMovies = async (req, res) => {
     if (req.query.sort) {
       const sortBy = req.query.sort.split(",").join(" ");
       query = query.sort(sortBy);
+    }
+
+    // ✅ Apply limit
+    if (req.query.limit) {
+      const limit = parseInt(req.query.limit, 10);
+      query = query.limit(limit);
+    }
+
+    // Apply field limiting
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    //Pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 5;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const moviesCount = await Movie.countDocuments();
+      if (skip >= moviesCount) {
+        throw new Error("This page is not found");
+      }
     }
 
     // Execute query
