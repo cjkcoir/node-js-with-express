@@ -2,6 +2,7 @@ const Movie = require("./../Models/moviesModel");
 const { MongooseQueryParser } = require("mongoose-query-parser");
 
 const qs = require("qs");
+const ApiFeatures = require("./../Utils/ApiFeatures");
 
 exports.getTopThreeHighestRatingsMovies = (req, res, next) => {
   req.query.limit = "3";
@@ -11,58 +12,77 @@ exports.getTopThreeHighestRatingsMovies = (req, res, next) => {
 
 exports.getAllMovies = async (req, res) => {
   try {
+    const features = new ApiFeatures(Movie.find(), req.query)
+      .sort()
+      .filter()
+      .limitFields()
+      .paginate();
+
+    let movies = await features.query;
     // Parse raw query for advanced filtering
     // const parsedQuery = qs.parse(req._parsedUrl.query);
-    const parsedQuery = req.query;
+    // const parsedQuery = req.query;
 
     // Clone the query object and remove special fields
-    const queryObj = { ...parsedQuery };
-    const excludedFields = ["sort", "page", "limit", "fields"];
-    excludedFields.forEach((field) => delete queryObj[field]);
+    // const queryObj = { ...parsedQuery };
+    // const excludedFields = ["sort", "page", "limit", "fields"];
+    // excludedFields.forEach((field) => delete queryObj[field]);
 
-    // Convert operators to MongoDB format
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    const filter = JSON.parse(queryStr);
+    // // Convert operators to MongoDB format
+    // let queryStr = JSON.stringify(queryObj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // const filter = JSON.parse(queryStr);
 
-    // Build the query
-    let query = Movie.find(filter);
+    // // Build the query
+    // let query = Movie.find(filter);
 
     // Apply sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    }
+    // if (req.query.sort) {
+    //   const sortBy = req.query.sort.split(",").join(" ");
+    //   query = query.sort(sortBy);
+    // }
 
-    // ✅ Apply limit
-    if (req.query.limit) {
-      const limit = parseInt(req.query.limit, 10);
-      query = query.limit(limit);
-    }
+    // // ✅ Apply limit
+    // if (req.query.limit) {
+    //   const limit = parseInt(req.query.limit, 10);
+    //   query = query.limit(limit);
+    // }
 
     // Apply field limiting
-    if (req.query.fields) {
-      const fields = req.query.fields.split(",").join(" ");
-      query = query.select(fields);
-    } else {
-      query = query.select("-__v");
-    }
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(",").join(" ");
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select("-__v");
+    // }
 
-    //Pagination
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 5;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
+    // //PAGINATION STARTS HERE
 
-    if (req.query.page) {
-      const moviesCount = await Movie.countDocuments();
-      if (skip >= moviesCount) {
-        throw new Error("This page is not found");
-      }
-    }
+    // // Extract the page number from query params, convert it to a number (*1 trick), default to 1 if not provided
+    // const page = req.query.page * 1 || 1;
+
+    // // Extract the limit (number of documents per page) from query params, convert to number, default to 5
+    // const limit = req.query.limit * 1 || 5;
+
+    // // Calculate how many documents to skip before fetching the current page
+    // const skip = (page - 1) * limit;
+
+    // // Apply skip and limit to the query (pagination logic)
+    // query = query.skip(skip).limit(limit);
+
+    // // If a specific page is requested, check whether it actually exists
+    // if (req.query.page) {
+    //   // Count total number of documents in the Movie collection
+    //   const moviesCount = await Movie.countDocuments();
+
+    //   // If skip value exceeds total documents, the page doesn't exist
+    //   if (skip >= moviesCount) {
+    //     throw new Error("This page is not found");
+    //   }
+    // }
 
     // Execute query
-    const movies = await query;
+    // const movies = await query;
 
     res.status(200).json({
       status: "Success",
@@ -78,59 +98,6 @@ exports.getAllMovies = async (req, res) => {
     });
   }
 };
-
-// exports.getAllMovies = async (req, res) => {
-
-//   try {
-//     // Parse the raw query string to support nested parameters like ratings[gte]
-//     const parsedQuery = qs.parse(req._parsedUrl.query);
-
-//     // Log the parsed query for debugging
-//     console.log(parsedQuery);
-
-//     // Convert the parsed query object to a string for regex manipulation
-//     let queryString = JSON.stringify(parsedQuery);
-
-//     // Replace operators like gte, lt with MongoDB equivalents ($gte, $lt)
-//     queryString = queryString.replace(
-//       /\b(gte|gt|lte|lt)\b/g,
-//       (match) => `$${match}`
-//     );
-
-//     // Parse the modified string back into an object
-//     let queryObject = JSON.parse(queryString);
-
-//     // Ensure it's a plain object (not a prototype chain object)
-//     queryObject = { ...queryObject };
-
-//     // Log the final query object to verify MongoDB filter structure
-//     console.log(queryObject);
-
-//     let query = Movie.find(queryObject);
-
-//     if (req.query.sort) {
-//       query = query.sort(req.query.sort);
-//     }
-
-//     // Query the Movie collection using the constructed filter
-//     const movies = await query;
-
-//     // Send a success response with the number of movies and the data
-//     res.status(200).json({
-//       status: "Success",
-//       NoofMovies: movies.length,
-//       data: {
-//         movies: movies,
-//       },
-//     });
-//   } catch (error) {
-//     // Handle any errors and send a failure response
-//     res.status(400).json({
-//       status: "Fail",
-//       message: error.message,
-//     });
-//   }
-// };
 
 exports.getAMovieById = async (req, res) => {
   try {

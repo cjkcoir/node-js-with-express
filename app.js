@@ -1,6 +1,8 @@
 const express = require("express"); // Import the Express framework
 const moment = require("moment-timezone");
 const morgan = require("morgan");
+// const sanitize = require("express-mongo-sanitize");
+// const xss = require("xss-clean");
 
 const app = express(); // Create an Express application instance
 
@@ -15,6 +17,9 @@ app.use(express.json());
 // if (process.env.NODE_ENV === "development") {
 //   app.use(morgan("dev"));
 // }
+// app.use(sanitize());
+
+// app.use(xss());
 app.use(ownMiddleware);
 app.use((req, res, next) => {
   req.requestedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
@@ -29,4 +34,10 @@ app.use((req, res, next) => {
 app.use(express.static("./public"));
 
 app.use("/api/v1/movies", moviesRouter);
+app.use((req, res, next) => {
+  res.status(404).json({
+    status: "Fail",
+    message: `Can't find ${req.originalUrl} not found on the server `,
+  });
+});
 module.exports = app;
