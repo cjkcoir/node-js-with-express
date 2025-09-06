@@ -217,3 +217,33 @@ exports.deleteAMovieById = async (req, res) => {
     });
   }
 };
+
+exports.getMoviesStatistics = async (req, res) => {
+  try {
+    const statistics = await Movie.aggregate([
+      { $match: { ratings: { $gte: 9.5 } } },
+      {
+        $group: {
+          _id: null,
+          totalMovies: { $sum: 1 }, // number of movies included
+          averageRatings: { $avg: "$ratings" },
+          averagePrice: { $avg: "$price" },
+          maximumPrice: { $max: "$price" },
+          minimumPrice: { $min: "$price" },
+          totalPrice: { $sum: "$price" },
+        },
+      },
+    ]);
+    res.status(200).json({
+      status: "Success",
+      data: {
+        statistics,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
+};

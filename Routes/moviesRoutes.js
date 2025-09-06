@@ -8,6 +8,8 @@ const router = express.Router();
 //   next();
 // });
 
+router.route("/statistics").get(moviesControllers.getMoviesStatistics);
+
 // router.param("id", moviesControllers.checkId);
 router
   .route("/highest-rated")
