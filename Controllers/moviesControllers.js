@@ -224,7 +224,7 @@ exports.getMoviesStatistics = async (req, res) => {
       { $match: { ratings: { $gte: 9.5 } } },
       {
         $group: {
-          _id: null,
+          _id: "$releaseYear",
           totalMovies: { $sum: 1 }, // number of movies included
           averageRatings: { $avg: "$ratings" },
           averagePrice: { $avg: "$price" },
@@ -233,6 +233,7 @@ exports.getMoviesStatistics = async (req, res) => {
           totalPrice: { $sum: "$price" },
         },
       },
+      { $sort: { minimumPrice: 1 } },
     ]);
     res.status(200).json({
       status: "Success",
