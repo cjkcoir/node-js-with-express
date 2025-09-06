@@ -16,7 +16,19 @@ exports.getAllMovies = async (req, res) => {
       .sort()
       .filter()
       .limitFields()
-      .paginate();
+      .paginate(Movie);
+
+    // Optional: Check if requested page exists
+    if (req.query.page) {
+      const moviesCount = await Movie.countDocuments();
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 10;
+      const skip = (page - 1) * limit;
+
+      if (skip >= moviesCount) {
+        throw new Error("This page is not found");
+      }
+    }
 
     let movies = await features.query;
     // Parse raw query for advanced filtering

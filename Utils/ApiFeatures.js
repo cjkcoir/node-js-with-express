@@ -80,35 +80,44 @@ class ApiFeatures {
     }
     return this;
   }
-
   paginate() {
-    //PAGINATION STARTS HERE
-
-    // Extract the page number from query params, convert it to a number (*1 trick), default to 1 if not provided
     const page = this.queryStr.page * 1 || 1;
-
-    // Extract the limit (number of documents per page) from query params, convert to number, default to 5
     const limit = this.queryStr.limit * 1 || 10;
-
-    // Calculate how many documents to skip before fetching the current page
     const skip = (page - 1) * limit;
 
-    // Apply skip and limit to the query (pagination logic)
     this.query = this.query.skip(skip).limit(limit);
-
-    // If a specific page is requested, check whether it actually exists
-    if (this.queryStr.page) {
-      // Count total number of documents in the Movie collection
-      const moviesCount = Movie.countDocuments();
-
-      // If skip value exceeds total documents, the page doesn't exist
-      if (skip >= moviesCount) {
-        throw new Error("This page is not found");
-      }
-    }
-
     return this;
   }
+
+  // paginate(Model) {
+  //   //PAGINATION STARTS HERE
+
+  //   // Extract the page number from query params, convert it to a number (*1 trick), default to 1 if not provided
+  //   const page = this.queryStr.page * 1 || 1;
+
+  //   // Extract the limit (number of documents per page) from query params, convert to number, default to 5
+  //   const limit = this.queryStr.limit * 1 || 10;
+
+  //   // Calculate how many documents to skip before fetching the current page
+  //   const skip = (page - 1) * limit;
+
+  //   // Apply skip and limit to the query (pagination logic)
+  //   this.query = this.query.skip(skip).limit(limit);
+
+  //   // If a specific page is requested, check whether it actually exists
+  //   if (this.queryStr.page) {
+  //     // Count total number of documents in the Movie collection
+  //     const moviesCount = Movie.countDocuments();
+
+  //     // If skip value exceeds total documents, the page doesn't exist
+  //     if (skip >= moviesCount) {
+  //       throw new Error("This page is not found");
+  //     }
+
+  //   }
+
+  //   return this;
+  // }
 }
 
 module.exports = ApiFeatures;
