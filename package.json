@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/cjkcoir/node-js-with-express#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-mongo-sanitize": "^2.2.0",
