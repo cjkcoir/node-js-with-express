@@ -1,6 +1,8 @@
 const User = require("./../Models/usersModel");
 const jwt = require("jsonwebtoken");
 const util = require("util");
+const sendEmail = require("./../Utils/email");
+const crypto = require("crypto");
 
 const signInToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET_STRING, {
@@ -156,5 +158,70 @@ exports.forgotPassword = async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   //3.Send the Email to the User email & send reset Token
+
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/users/resetPassword/${resetToken}`;
+
+  const message = `We have receieved a password reset request.Please use the below link to reset your Password. \n\n\n ${resetUrl} \n\n. This reset Password link is valid for only 10 Minutes `;
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password change Request receieved",
+      message: message,
+    });
+
+    res.status(200).json({
+      status: "Success",
+      message: "Password reset Linke send to the User Email",
+    });
+  } catch (error) {
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpires = undefined;
+    user.save({ validateBeforeSave: false });
+
+    res.status(500).json({
+      status: "Fail",
+      message:
+        "There was an error sending password reset email: Please Try Again Later",
+    });
+  }
 };
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = async (req, res, next) => {
+  //IF THE USER EXISTS WITH THE GIVEN TOKEN & TOKEN HAS NOT EXPIRED
+
+  const token = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    res.status(400).json({
+      status: "Fail",
+      message: "Password reset Token has INVALID or has Expired",
+    });
+  }
+
+  //RESETTING THE USER PASSWORD
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpires = undefined;
+  user.passwordChangedAt = Date.now();
+
+  user.save();
+
+  //AFTER RESETTING LOGIN AUTOMATICALLY
+  const loginToken = signInToken(user._id);
+
+  res.status(200).json({
+    status: "Login Success",
+    message: "Loggedin",
+    loginToken: loginToken,
+    loginUser: user,
+  });
+};
