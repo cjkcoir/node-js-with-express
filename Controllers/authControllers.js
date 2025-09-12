@@ -1,5 +1,6 @@
 const User = require("./../Models/usersModel");
 const jwt = require("jsonwebtoken");
+const util = require("util");
 
 const signInToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET_STRING, {
@@ -65,4 +66,75 @@ exports.login = async (req, res, next) => {
       message: error.message,
     });
   }
+};
+
+exports.protect = async (req, res, next) => {
+  try {
+    //1.Read the token & check if it exists
+    const testToken = req.headers.authorization;
+    let token;
+    if (testToken && testToken.startsWith("Bearer")) {
+      token = testToken.split(" ")[1];
+      console.log(token);
+    }
+    if (!token) {
+      res.status(401).json({
+        status: "Fail",
+        message: "You are not LoggedIn",
+      });
+    }
+
+    // validating the token
+    const decodedToken = await util.promisify(jwt.verify)(
+      token,
+      process.env.SECRET_STRING
+    );
+    console.log("decodedToken =", decodedToken);
+
+    //If the user exists in database
+
+    const user = await User.findById(decodedToken.id);
+    if (!user) {
+      res.status(401).json({
+        status: "Fail",
+        message: "The user with the given token does not exists in the DB",
+      });
+    }
+
+    // ✅ Attach user to request
+    req.user = user;
+
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "Fail",
+        message: "Your token has expired. Please log in again",
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        status: "Fail",
+        message: "Invalid token. Please log in again.",
+      });
+    }
+
+    res.status(400).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
+};
+
+exports.restrict = (...role) => {
+  return (req, res, next) => {
+    if (!role.includes(req.user.role)) {
+      res.status(403).json({
+        status: "Fail",
+        message: "You dont have the permission to DELETE a Movie",
+      });
+    }
+    next();
+  };
 };

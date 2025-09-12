@@ -1,5 +1,6 @@
 const express = require("express"); // Import the Express framework
 const moviesControllers = require("./../Controllers/moviesControllers");
+const authControllers = require("./../Controllers/authControllers");
 
 const router = express.Router();
 
@@ -20,12 +21,16 @@ router
 
 router
   .route("/")
-  .get(moviesControllers.getAllMovies)
+  .get(authControllers.protect, moviesControllers.getAllMovies)
   .post(moviesControllers.createAMovie);
 router
   .route("/:id")
   .get(moviesControllers.getAMovieById)
   .patch(moviesControllers.updateAMovieById)
-  .delete(moviesControllers.deleteAMovieById);
+  .delete(
+    authControllers.protect,
+    authControllers.restrict("admin", "ceo"),
+    moviesControllers.deleteAMovieById
+  );
 
 module.exports = router;
