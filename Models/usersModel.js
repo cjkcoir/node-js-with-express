@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const { log } = require("console");
 const usersSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -37,6 +39,15 @@ const usersSchema = new mongoose.Schema({
       message: "Password & confirmPassword doesnot Match",
     },
   },
+  passwordChangedAt: {
+    type: Date,
+  },
+  passwordResetToken: {
+    type: String,
+  },
+  passwordResetTokenExpires: {
+    type: Date,
+  },
 });
 
 // Run this middleware before saving a document to the DB
@@ -56,6 +67,19 @@ usersSchema.pre("save", async function (next) {
 
 usersSchema.methods.comparePasswordInDb = async function (pswd, passworddb) {
   return await bcrypt.compare(pswd, passworddb);
+};
+
+usersSchema.methods.createResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+  console.log("resetToken : ", resetToken);
+  console.log("Encryped reset Token : ", this.passwordResetToken);
+
+  return resetToken;
 };
 
 const User = mongoose.model("User", usersSchema);
