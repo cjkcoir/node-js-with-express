@@ -225,3 +225,30 @@ exports.resetPassword = async (req, res, next) => {
     loginUser: user,
   });
 };
+
+exports.updatePassword = async (req, res, next) => {
+  //Get current user data from db
+  const user = await User.findById(req.user._id).select("+password");
+  //Check if the supplied current password is correct
+  if (
+    !(await user.comparePasswordInDb(req.body.currentPassword, user.password))
+  ) {
+    res.status(401).json({
+      status: "Fail",
+      message: "The current password you provides is wrong",
+    });
+  }
+  //if supplied password is correct, update the password with the value
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+  //Login user & send JWT
+  const loginToken = signInToken(user._id);
+
+  res.status(200).json({
+    status: "Login Success",
+    message: "Loggedin",
+    loginToken: loginToken,
+    loginUser: user,
+  });
+};
