@@ -39,6 +39,8 @@ const usersSchema = new mongoose.Schema({
       message: "Password & confirmPassword doesnot Match",
     },
   },
+
+  active: { type: Boolean, default: true, select: false },
   passwordChangedAt: {
     type: Date,
   },
@@ -62,6 +64,11 @@ usersSchema.pre("save", async function (next) {
   this.confirmPassword = undefined;
 
   // Call next() to continue saving the document
+  next();
+});
+
+usersSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 

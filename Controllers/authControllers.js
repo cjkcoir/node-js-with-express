@@ -10,6 +10,17 @@ const signInToken = (id) => {
   });
 };
 
+const createSendResponse = (user, statusCode, res) => {
+  const loginToken = signInToken(user._id);
+
+  res.status(statusCode).json({
+    status: "Login Success",
+    message: "Loggedin",
+    loginToken: loginToken,
+    loginUser: user,
+  });
+};
+
 exports.signup = async (req, res, next) => {
   try {
     const newUser = await User.create(req.body);
@@ -54,14 +65,15 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    const token = signInToken(user._id);
+    createSendResponse(user, 201, res);
+    // const token = signInToken(user._id);
 
-    res.status(200).json({
-      status: "Login Success",
-      message: "Loggedin",
-      token: token,
-      user: user,
-    });
+    // res.status(200).json({
+    //   status: "Login Success",
+    //   message: "Loggedin",
+    //   token: token,
+    //   user: user,
+    // });
   } catch (error) {
     res.status(400).json({
       status: "Fail",
@@ -80,7 +92,7 @@ exports.protect = async (req, res, next) => {
       console.log(token);
     }
     if (!token) {
-      res.status(401).json({
+      return res.status(401).json({
         status: "Fail",
         message: "You are not LoggedIn",
       });
@@ -97,7 +109,7 @@ exports.protect = async (req, res, next) => {
 
     const user = await User.findById(decodedToken.id);
     if (!user) {
-      res.status(401).json({
+      return res.status(401).json({
         status: "Fail",
         message: "The user with the given token does not exists in the DB",
       });
@@ -122,7 +134,7 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    res.status(400).json({
+    return res.status(400).json({
       status: "Fail",
       message: error.message,
     });
@@ -161,7 +173,7 @@ exports.forgotPassword = async (req, res, next) => {
 
   const resetUrl = `${req.protocol}://${req.get(
     "host"
-  )}/api/v1/users/resetPassword/${resetToken}`;
+  )}/api/v1/auth/resetPassword/${resetToken}`;
 
   const message = `We have receieved a password reset request.Please use the below link to reset your Password. \n\n\n ${resetUrl} \n\n. This reset Password link is valid for only 10 Minutes `;
   try {
@@ -187,68 +199,65 @@ exports.forgotPassword = async (req, res, next) => {
     });
   }
 };
-exports.resetPassword = async (req, res, next) => {
-  //IF THE USER EXISTS WITH THE GIVEN TOKEN & TOKEN HAS NOT EXPIRED
+// exports.resetPassword = async (req, res, next) => {
+//   //IF THE USER EXISTS WITH THE GIVEN TOKEN & TOKEN HAS NOT EXPIRED
 
+//   const token = crypto
+//     .createHash("sha256")
+//     .update(req.params.token)
+//     .digest("hex");
+//   const user = await User.findOne({
+//     passwordResetToken: token,
+//     passwordResetTokenExpires: { $gt: Date.now() },
+//   });
+
+//   if (!user) {
+//     res.status(400).json({
+//       status: "Fail",
+//       message: "Password reset Token has INVALID or has Expired",
+//     });
+//   }
+
+//   //RESETTING THE USER PASSWORD
+//   user.password = req.body.password;
+//   user.confirmPassword = req.body.confirmPassword;
+//   user.passwordResetToken = undefined;
+//   user.passwordResetTokenExpires = undefined;
+//   user.passwordChangedAt = Date.now();
+
+//   user.save();
+
+//   //AFTER RESETTING LOGIN AUTOMATICALLY
+//   createSendResponse(user, 201, res);
+// };
+
+exports.resetPassword = async (req, res, next) => {
   const token = crypto
     .createHash("sha256")
     .update(req.params.token)
     .digest("hex");
+
   const user = await User.findOne({
     passwordResetToken: token,
     passwordResetTokenExpires: { $gt: Date.now() },
   });
 
   if (!user) {
-    res.status(400).json({
+    return res.status(400).json({
       status: "Fail",
-      message: "Password reset Token has INVALID or has Expired",
+      message: "Password reset Token is INVALID or has EXPIRED",
     });
   }
 
-  //RESETTING THE USER PASSWORD
+  // Resetting the user password
   user.password = req.body.password;
   user.confirmPassword = req.body.confirmPassword;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpires = undefined;
   user.passwordChangedAt = Date.now();
 
-  user.save();
-
-  //AFTER RESETTING LOGIN AUTOMATICALLY
-  const loginToken = signInToken(user._id);
-
-  res.status(200).json({
-    status: "Login Success",
-    message: "Loggedin",
-    loginToken: loginToken,
-    loginUser: user,
-  });
-};
-
-exports.updatePassword = async (req, res, next) => {
-  //Get current user data from db
-  const user = await User.findById(req.user._id).select("+password");
-  //Check if the supplied current password is correct
-  if (
-    !(await user.comparePasswordInDb(req.body.currentPassword, user.password))
-  ) {
-    res.status(401).json({
-      status: "Fail",
-      message: "The current password you provides is wrong",
-    });
-  }
-  //if supplied password is correct, update the password with the value
-  user.password = req.body.password;
-  user.confirmPassword = req.body.confirmPassword;
   await user.save();
-  //Login user & send JWT
-  const loginToken = signInToken(user._id);
 
-  res.status(200).json({
-    status: "Login Success",
-    message: "Loggedin",
-    loginToken: loginToken,
-    loginUser: user,
-  });
+  // After resetting, login automatically
+  createSendResponse(user, 201, res);
 };

@@ -2,6 +2,7 @@ const express = require("express"); // Import the Express framework
 const moment = require("moment-timezone");
 const morgan = require("morgan");
 const authRouter = require("./Routes/authRouter.js");
+const usersRouter = require("./Routes/usersRoutes");
 // const sanitize = require("express-mongo-sanitize");
 // const xss = require("xss-clean");
 
@@ -35,7 +36,8 @@ app.use((req, res, next) => {
 app.use(express.static("./public"));
 
 app.use("/api/v1/movies", moviesRouter);
-app.use("/api/v1/users", authRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", usersRouter);
 app.use((req, res, next) => {
   res.status(404).json({
     status: "Fail",
