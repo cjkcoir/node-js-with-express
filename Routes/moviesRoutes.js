@@ -1,5 +1,6 @@
 const express = require("express"); // Import the Express framework
 const moviesControllers = require("./../Controllers/moviesControllers");
+const authControllers = require("./../Controllers/authControllers");
 
 const router = express.Router();
 
@@ -8,16 +9,28 @@ const router = express.Router();
 //   next();
 // });
 
-router.param("id", moviesControllers.checkId);
+router.route("/statistics").get(moviesControllers.getMoviesStatistics);
+
+// router.param("id", moviesControllers.checkId);
+router
+  .route("/highest-rated")
+  .get(
+    moviesControllers.getTopThreeHighestRatingsMovies,
+    moviesControllers.getAllMovies
+  );
 
 router
   .route("/")
-  .get(moviesControllers.getAllMovies)
-  .post(moviesControllers.validateReqBody, moviesControllers.createAMovie);
+  .get(authControllers.protect, moviesControllers.getAllMovies)
+  .post(moviesControllers.createAMovie);
 router
   .route("/:id")
   .get(moviesControllers.getAMovieById)
   .patch(moviesControllers.updateAMovieById)
-  .delete(moviesControllers.deleteAMovieById);
+  .delete(
+    authControllers.protect,
+    authControllers.restrict("admin", "ceo"),
+    moviesControllers.deleteAMovieById
+  );
 
 module.exports = router;

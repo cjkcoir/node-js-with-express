@@ -1,114 +1,250 @@
-const fs = require("fs"); // Import the built-in File System module
+const Movie = require("./../Models/moviesModel");
+const { MongooseQueryParser } = require("mongoose-query-parser");
 
-const movies = JSON.parse(fs.readFileSync("./data/movies.json"));
-// Read the movies.json file synchronously and parse its JSON content into a JS object
+const qs = require("qs");
+const ApiFeatures = require("./../Utils/ApiFeatures");
 
-exports.checkId = (req, res, next, value) => {
-  let movie = movies.find((element) => element.id === value * 1);
-  console.log(`Movie Id = ${value}`);
-  if (!movie) {
-    return res.status(404).json({
-      status: "Failed to get a Movie by ID",
-      requestedAt: req.requestedAt,
-      message: `Movie with id = ${value} is not in the Database`,
-    });
-  }
-
+exports.getTopThreeHighestRatingsMovies = (req, res, next) => {
+  req.query.limit = "3";
+  req.query.sort = "-ratings";
   next();
 };
 
-exports.getAllMovies = (req, res) => {
-  // Define a GET route at /api/v1/movies
-  res.status(200).json({
-    // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
-    message: "Success", // Include a success message
-    requestedAt: req.requestedAt,
-    noOfMovies: movies.length,
-    data: {
-      // Wrap movie data inside a "data" object --ENVELOPING
-      movies: movies, // Send the movies list from the file
-    },
-  });
-};
+exports.getAllMovies = async (req, res) => {
+  try {
+    const features = new ApiFeatures(Movie.find(), req.query)
+      .sort()
+      .filter()
+      .limitFields()
+      .paginate(Movie);
 
-exports.getAMovieById = (req, res) => {
-  const id = req.params.id * 1;
-  let movie = movies.find((element) => element.id === id);
+    // Optional: Check if requested page exists
+    if (req.query.page) {
+      const moviesCount = await Movie.countDocuments();
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 10;
+      const skip = (page - 1) * limit;
 
-  res.status(200).json({
-    // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
-    message: "Success", // Include a success message
-    requestedAt: req.requestedAt,
-    data: {
-      // Wrap movie data inside a "data" object --ENVELOPING
-      movie: movie, // Send the movies list from the file
-    },
-  });
-};
+      if (skip >= moviesCount) {
+        throw new Error("This page is not found");
+      }
+    }
 
-exports.validateReqBody = (req, res, next) => {
-  if (!req.body.name || !req.body.releaseYear || !req.body.duration) {
-    return res.status(400).json({
+    let movies = await features.query;
+    // Parse raw query for advanced filtering
+    // const parsedQuery = qs.parse(req._parsedUrl.query);
+    // const parsedQuery = req.query;
+
+    // Clone the query object and remove special fields
+    // const queryObj = { ...parsedQuery };
+    // const excludedFields = ["sort", "page", "limit", "fields"];
+    // excludedFields.forEach((field) => delete queryObj[field]);
+
+    // // Convert operators to MongoDB format
+    // let queryStr = JSON.stringify(queryObj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // const filter = JSON.parse(queryStr);
+
+    // // Build the query
+    // let query = Movie.find(filter);
+
+    // Apply sorting
+    // if (req.query.sort) {
+    //   const sortBy = req.query.sort.split(",").join(" ");
+    //   query = query.sort(sortBy);
+    // }
+
+    // // ✅ Apply limit
+    // if (req.query.limit) {
+    //   const limit = parseInt(req.query.limit, 10);
+    //   query = query.limit(limit);
+    // }
+
+    // Apply field limiting
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(",").join(" ");
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select("-__v");
+    // }
+
+    // //PAGINATION STARTS HERE
+
+    // // Extract the page number from query params, convert it to a number (*1 trick), default to 1 if not provided
+    // const page = req.query.page * 1 || 1;
+
+    // // Extract the limit (number of documents per page) from query params, convert to number, default to 5
+    // const limit = req.query.limit * 1 || 5;
+
+    // // Calculate how many documents to skip before fetching the current page
+    // const skip = (page - 1) * limit;
+
+    // // Apply skip and limit to the query (pagination logic)
+    // query = query.skip(skip).limit(limit);
+
+    // // If a specific page is requested, check whether it actually exists
+    // if (req.query.page) {
+    //   // Count total number of documents in the Movie collection
+    //   const moviesCount = await Movie.countDocuments();
+
+    //   // If skip value exceeds total documents, the page doesn't exist
+    //   if (skip >= moviesCount) {
+    //     throw new Error("This page is not found");
+    //   }
+    // }
+
+    // Execute query
+    // const movies = await query;
+
+    res.status(200).json({
+      status: "Success",
+      NoofMovies: movies.length,
+      data: {
+        movies,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
       status: "Fail",
-      message:
-        "Request Body should contain name,releaseYear & duration of Movie",
+      message: error.message,
     });
   }
-  next(); // ✅ continue to createAMovie
 };
 
-exports.createAMovie = (req, res) => {
-  console.log(req.body);
-  const newId = movies[movies.length - 1].id + 1;
-  const newMovie = Object.assign({ id: newId }, req.body);
-  movies.push(newMovie);
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+exports.getAMovieById = async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+
+    res.status(200).json({
+      status: "Success",
+      data: {
+        movie: movie,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
+};
+
+exports.createAMovie = async (req, res) => {
+  try {
+    const movie = await Movie.create(req.body);
+
     res.status(201).json({
       status: "Success",
-      requestedAt: req.requestedAt,
-      message: "Movie created",
       data: {
-        movie: newMovie,
+        createdMovie: movie,
       },
     });
-  });
+  } catch (error) {
+    res.status(400).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
 };
 
-exports.updateAMovieById = (req, res) => {
-  const id = req.params.id * 1;
-  let movieToUpdate = movies.find((element) => element.id === id);
+exports.updateAMovieById = async (req, res) => {
+  try {
+    const updtedMovie = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-  const index = movies.indexOf(movieToUpdate);
-  const updatedMovieObject = Object.assign(movieToUpdate, req.body);
-  movies[index] = updatedMovieObject;
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+    if (!updtedMovie) {
+      return res.status(404).json({
+        status: "Fail",
+        message: "No movie found with that ID",
+      });
+    }
     res.status(200).json({
-      // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
       status: "Success",
-      message: `Successfully Updated a Movie with ID = ${id}`, // Include a success message
-      requestedAt: req.requestedAt,
       data: {
-        UpdatedMovie: updatedMovieObject,
+        updtedMovie: updtedMovie,
       },
     });
-  });
+  } catch (error) {
+    res.status(400).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
 };
 
-exports.deleteAMovieById = (req, res) => {
-  const id = req.params.id * 1;
-  let movieToUpdate = movies.find((element) => element.id === id);
+// exports.deleteAMovieById = async (req, res) => {
+//   try {
+//     const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
+//     res.status(200).json({
+//       status: "Success",
+//       message: "Deleted movie successfully",
+//       data: {
+//         deletedMovie: deletedMovie,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       status: "Fail",
+//       message: error.message,
+//     });
+//   }
+// };
 
-  const index = movies.indexOf(movieToUpdate);
-  movies.splice(index, 1);
-  fs.writeFile("./data/movies.json", JSON.stringify(movies), () => {
+exports.deleteAMovieById = async (req, res) => {
+  try {
+    const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
+
+    if (!deletedMovie) {
+      return res.status(404).json({
+        status: "Fail",
+        message: "No movie found with that ID",
+      });
+    }
+
     res.status(200).json({
-      // Send an HTTP 200 (OK) response in JSON format --METHOD CHAINING
       status: "Success",
-      message: `Successfully deleted a Movie with ID = ${id}`, // Include a success message
-      requestedAt: req.requestedAt,
+      message: "Deleted movie successfully",
       data: {
-        DeletedMovie: movieToUpdate,
+        deletedMovie,
       },
     });
-  });
+  } catch (error) {
+    res.status(400).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
+};
+
+exports.getMoviesStatistics = async (req, res) => {
+  try {
+    const statistics = await Movie.aggregate([
+      { $match: { ratings: { $gte: 9.5 } } },
+      {
+        $group: {
+          _id: "$releaseYear",
+          totalMovies: { $sum: 1 }, // number of movies included
+          averageRatings: { $avg: "$ratings" },
+          averagePrice: { $avg: "$price" },
+          maximumPrice: { $max: "$price" },
+          minimumPrice: { $min: "$price" },
+          totalPrice: { $sum: "$price" },
+        },
+      },
+      { $sort: { minimumPrice: 1 } },
+    ]);
+    res.status(200).json({
+      status: "Success",
+      data: {
+        statistics,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "Fail",
+      message: error.message,
+    });
+  }
 };

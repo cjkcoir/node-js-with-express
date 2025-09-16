@@ -17,11 +17,21 @@
   },
   "homepage": "https://github.com/cjkcoir/node-js-with-express#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "moment-timezone": "^0.6.0",
     "mongoose": "^8.18.0",
+    "mongoose-query-parser": "^1.3.1",
     "morgan": "^1.10.1",
-    "nodemon": "^3.1.10"
+    "nodemailer": "^7.0.6",
+    "nodemon": "^3.1.10",
+    "qs": "^6.14.0",
+    "query-to-mongo": "^0.12.1",
+    "validator": "^13.15.15"
   }
 }
