@@ -13,6 +13,20 @@ const signInToken = (id) => {
 const createSendResponse = (user, statusCode, res) => {
   const loginToken = signInToken(user._id);
 
+  const options = {
+    maxAge: process.env.LOGIN_EXPIRES,
+
+    httpOnly: true,
+  };
+
+  if (process.env.NODE_ENV === "production") {
+    options.secure = true;
+  }
+
+  res.cookie("jwt", loginToken, options);
+
+  user.password = undefined;
+
   res.status(statusCode).json({
     status: "Login Success",
     message: "Loggedin",
@@ -29,13 +43,15 @@ exports.signup = async (req, res, next) => {
     // });
 
     const token = signInToken(newUser._id);
-    res.status(200).json({
-      status: "Success",
+    // Reuse the helper to send token + cookie + response
+    createSendResponse(newUser, 201, res);
+    // res.status(200).json({
+    //   status: "Success",
 
-      data: {
-        createdUser: newUser,
-      },
-    });
+    //   data: {
+    //     createdUser: newUser,
+    //   },
+    // });
   } catch (error) {
     res.status(400).json({
       status: "Fail",

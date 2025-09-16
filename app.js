@@ -5,8 +5,19 @@ const authRouter = require("./Routes/authRouter.js");
 const usersRouter = require("./Routes/usersRoutes");
 // const sanitize = require("express-mongo-sanitize");
 // const xss = require("xss-clean");
-
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const app = express(); // Create an Express application instance
+app.use(helmet());
+
+let limiter = rateLimit({
+  max: 3,
+  windowMs: 1 * 60 * 60 * 1000,
+  message:
+    "We have received too many requests from thi IP. Please try after One Hour.",
+});
+
+app.use("/api", limiter);
 
 const moviesRouter = require("./Routes/moviesRoutes.js");
 
@@ -15,7 +26,7 @@ function ownMiddleware(req, res, next) {
   next();
 }
 
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 // if (process.env.NODE_ENV === "development") {
 //   app.use(morgan("dev"));
 // }
