@@ -49,10 +49,33 @@ app.use(express.static("./public"));
 app.use("/api/v1/movies", moviesRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", usersRouter);
+// Middleware to handle undefined routes
 app.use((req, res, next) => {
-  res.status(404).json({
-    status: "Fail",
-    message: `Can't find ${req.originalUrl} not found on the server `,
+  // Send a JSON response with 404 status
+  // res.status(404).json({
+  //   status: "Fail", // Clearly mark request as failed
+  //   message: `Can't find ${req.originalUrl} not found on the server `, // Tell client which URL failed
+  // });
+  const err = new Error(
+    `Can't find ${req.originalUrl} not found on the server `
+  );
+  err.status = "fail";
+  err.statusCode = 404;
+  next(err);
+});
+
+app.use((error, req, res, next) => {
+  // Ensure the error object has a statusCode (default: 500 for server errors)
+  error.statusCode = error.statusCode || 500;
+
+  // Ensure the error object has a status (default: "error")
+  error.status = error.status || "error";
+
+  // Send the error response as JSON with proper HTTP status
+  res.status(error.statusCode).json({
+    status: error.statusCode, // The HTTP status code
+    message: error.message, // The error description/message
   });
 });
+
 module.exports = app;
